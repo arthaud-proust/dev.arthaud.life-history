@@ -1,0 +1,7 @@
+.nuxt
+.output
+node_modules
+yarn.lock
+
+# La documentation est mise en forme à la main : sa coupure de lignes porte du sens.
+*.md

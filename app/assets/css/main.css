@@ -2,17 +2,112 @@
 @import "@nuxt/ui";
 
 @theme static {
-  --font-sans: 'Public Sans', sans-serif;
+  --font-sans: "Public Sans", sans-serif;
 
-  --color-green-50: #EFFDF5;
-  --color-green-100: #D9FBE8;
-  --color-green-200: #B3F5D1;
-  --color-green-300: #75EDAE;
-  --color-green-400: #00DC82;
-  --color-green-500: #00C16A;
-  --color-green-600: #00A155;
-  --color-green-700: #007F45;
+  --color-green-50: #effdf5;
+  --color-green-100: #d9fbe8;
+  --color-green-200: #b3f5d1;
+  --color-green-300: #75edae;
+  --color-green-400: #00dc82;
+  --color-green-500: #00c16a;
+  --color-green-600: #00a155;
+  --color-green-700: #007f45;
   --color-green-800: #016538;
-  --color-green-900: #0A5331;
-  --color-green-950: #052E16;
+  --color-green-900: #0a5331;
+  --color-green-950: #052e16;
+}
+
+/* ---------------------------------------------------------------------------
+   Impression (C1, C2 de PRODUCT.md)
+
+   Chaque feuille est dessinée dans un espace de 2100 px de large puis réduite par
+   `--sheet-scale` : à l'écran pour tenir dans l'aperçu, à l'impression pour faire
+   exactement la largeur utile d'une A4. La résolution du rendu ne dépend donc pas
+   de la densité de pixels de l'écran.
+   --------------------------------------------------------------------------- */
+
+/* Épaisseur du trait de la frise.
+
+   Le trait est réduit avec la feuille : dans l'aperçu, ses 2 px tombent sous le pixel
+   d'écran — et un trait plus fin qu'un pixel n'est plus peint du tout (les virages,
+   eux, survivent : une courbe est lissée). L'aperçu le compense donc, en visant 1,5 px
+   d'écran ; il faut dépasser largement, car une bordure est ramenée au pixel entier
+   inférieur. Sur le papier, où la feuille est bien moins réduite, il garde ses 2 px. */
+:root {
+  --timeline-stroke: 2px;
+}
+
+/* Une feuille est blanche, même quand l'écran est sombre. La classe `light` posée
+   sur le cadre redonne à tout ce qu'il contient les jetons clairs du thème — les
+   cartes, leur texte, le trait — sans que rien n'ait à connaître la liste. */
+.print-sheet-frame {
+  overflow: hidden;
+  color-scheme: light;
+  background: #ffffff;
+}
+
+.print-sheet {
+  --timeline-stroke: max(2px, calc(1.5px / var(--sheet-scale, 1)));
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 2100px;
+  height: var(--sheet-height, 1485px);
+  padding: var(--sheet-padding, 71px);
+  background: #ffffff;
+  color: #111827;
+  transform: scale(var(--sheet-scale, 1));
+  transform-origin: top left;
+}
+
+/* Marge de recouvrement : deux feuilles consécutives se chevauchent, on coupe ici. */
+.print-sheet-seam {
+  position: absolute;
+  inset-block: 0;
+  right: 0;
+  border-right: 2px dashed #d1d5db;
+}
+
+@media screen {
+  .print-sheet-frame {
+    aspect-ratio: 2100 / var(--sheet-height-ratio, 1433);
+    border: 1px solid var(--ui-border);
+    border-radius: 0.25rem;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+  }
+}
+
+@media print {
+  /*
+    Un navigateur n'imprime pas les fonds par défaut : sans cela, les barres de période,
+    les pastilles de couleur et les jalons disparaissent à l'enregistrement en PDF —
+    c'est-à-dire tout ce qui porte la couleur choisie par le patient.
+  */
+  .print-sheet,
+  .print-sheet * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Le papier n'a pas de pixels : le trait reprend son épaisseur de dessin. */
+  .print-sheet {
+    --timeline-stroke: 2px;
+  }
+
+  .print-sheet-frame {
+    width: var(--sheet-width-mm);
+    height: var(--sheet-height-mm);
+    break-after: page;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .print-sheet-frame:last-of-type {
+    break-after: auto;
+  }
+
+  /* Rien d'autre que les feuilles ne doit atteindre le papier (C1). */
+  body {
+    background: #ffffff;
+  }
 }

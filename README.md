@@ -1,64 +1,79 @@
-# Nuxt Starter Template
+# Historique de vie
 
-[![Nuxt UI](https://img.shields.io/badge/Made%20with-Nuxt%20UI-00DC82?logo=nuxt&labelColor=020420)](https://ui.nuxt.com)
+Une application web pour construire, visualiser et imprimer la frise chronologique des
+évènements marquants de sa vie, dans un cadre de thérapie psychologique.
 
-Use this template to get started with [Nuxt UI](https://ui.nuxt.com) quickly.
+**Vos données ne quittent pas votre navigateur** : pas de compte, pas de serveur, pas
+de statistiques d'usage. La frise est enregistrée dans le stockage local, et s'exporte
+dans un fichier texte que vous pouvez lire, modifier et archiver sans l'application.
 
-- [Live demo](https://starter-template.nuxt.dev/)
-- [Documentation](https://ui.nuxt.com/docs/getting-started/installation/nuxt)
+Le besoin, les parcours utilisateur et les décisions de conception sont dans
+[PRODUCT.md](./PRODUCT.md).
 
-<a href="https://starter-template.nuxt.dev/" target="_blank">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://ui.nuxt.com/assets/templates/nuxt/starter-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="https://ui.nuxt.com/assets/templates/nuxt/starter-light.png">
-    <img alt="Nuxt Starter Template" src="https://ui.nuxt.com/assets/templates/nuxt/starter-light.png" width="830" height="466">
-  </picture>
-</a>
+## Le format de fichier
 
-> The starter template for Vue is on https://github.com/nuxt-ui-templates/starter-vue.
+Un seul format sert de stockage, d'export et d'import — une ligne par évènement :
 
-## Quick Start
+```text
+Mon histoire, commencée en thérapie.
 
-```bash [Terminal]
-npm create nuxt@latest -- -t ui
+# 1987
+Naissance
+
+# 2003 à 2006; rose
+Lycée
+Trois années difficiles, loin de ma famille.
+
+# 12 juin 2022 à aujourd'hui; sky
+Thérapie
 ```
 
-## Deploy your own
+Une ligne `#` ouvre un évènement et porte sa date, éventuellement sa couleur ; tout ce
+qui suit jusqu'au prochain `#` est sa description, **libre et sur autant de lignes
+qu'il le faut**. Sa première ligne sert d'étiquette sur la frise. La couleur est le nom
+d'une teinte Tailwind, pour que le fichier reste lisible.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-name=starter&repository-url=https%3A%2F%2Fgithub.com%2Fnuxt-ui-templates%2Fstarter&demo-image=https%3A%2F%2Fui.nuxt.com%2Fassets%2Ftemplates%2Fnuxt%2Fstarter-dark.png&demo-url=https%3A%2F%2Fstarter-template.nuxt.dev%2F&demo-title=Nuxt%20Starter%20Template&demo-description=A%20minimal%20template%20to%20get%20started%20with%20Nuxt%20UI.)
+Les dates acceptent trois précisions — `2024`, `juin 2023`, `12 juin 2022` — parce
+qu'on ne se souvient pas toujours du mois. La lecture est tolérante (`06/2023`,
+`sept 2001`, `2024 -> 2025`), l'écriture canonique. Un bloc incompris est conservé tel
+quel et signalé, jamais deviné ni supprimé. La grammaire complète est en §5 de
+[PRODUCT.md](./PRODUCT.md).
 
-## Setup
+## Développement
 
-Make sure to install the dependencies:
+Node 26 (voir [mise.toml](./mise.toml)).
 
 ```bash
-pnpm install
+yarn install
+yarn dev         # http://localhost:3000
+yarn test        # parseur, sérialiseur, échelles, pagination d'impression
+yarn lint        # règles de correction (le formatage est à Prettier)
+yarn format      # met en forme ; `yarn format:check` vérifie sans écrire
+yarn typecheck
+yarn build       # site statique dans .output/public
 ```
 
-## Development Server
+## Architecture
 
-Start the development server on `http://localhost:3000`:
+L'application est une **SPA statique** (`ssr: false`) : aucune donnée de patient ne peut
+transiter par un serveur, et la frise n'est lue et rendue que dans le navigateur.
 
-```bash
-pnpm dev
-```
+| Emplacement | Rôle |
+|---|---|
+| [app/utils/partial-date.ts](./app/utils/partial-date.ts) | Dates partielles : lecture tolérante, écriture canonique. Seule autorité sur les dates, partagée par le fichier et le formulaire. |
+| [app/utils/life-document.ts](./app/utils/life-document.ts) | Le document texte : parseur, sérialiseur, fusion à l'import. |
+| [app/utils/timeline-sequence.ts](./app/utils/timeline-sequence.ts) | Disposition de la frise : colonnes accolées, jalons d'année, bandeaux de période. |
+| [app/utils/print-pagination.ts](./app/utils/print-pagination.ts) | Rangement des cartes en feuilles A4, à partir de leurs dimensions mesurées. |
+| [modules/tailwind-palette/](./modules/tailwind-palette/) | Module Nuxt qui extrait la palette de `tailwindcss/theme.css` à la compilation et la convertit d'oklch en sRGB. Expose `#tailwind-palette`. |
+| [app/composables/useLifeHistory.ts](./app/composables/useLifeHistory.ts) | L'état, et son unique lieu de stockage : le document texte dans `localStorage`. |
+| [app/components/LifeTimeline.vue](./app/components/LifeTimeline.vue) | La frise : une suite de cartes en HTML, écran et impression. |
 
-## Production
+Le parseur et le sérialiseur sont le cœur du produit : ce sont eux qui garantissent
+qu'un export est réimportable, donc que les données appartiennent au patient. Ils sont
+écrits sans dépendance à l'interface et couverts par des tests d'aller-retour.
 
-Build the application for production:
-
-```bash
-pnpm build
-```
-
-Locally preview production build:
-
-```bash
-pnpm preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
-
-## Renovate integration
-
-Install [Renovate GitHub app](https://github.com/apps/renovate/installations/select_target) on your repository and you are good to go.
+La frise est rendue **en HTML**, sans librairie de timeline. Une frise dessinée sur un
+canvas écrit ses étiquettes d'un seul trait et les tronque : impossible d'y afficher la
+description entière d'un évènement, ce que ce produit exige. Le HTML donne en prime un
+texte qui s'imprime à la résolution de l'imprimante, se sélectionne et se laisse lire
+par un lecteur d'écran. Le raisonnement complet est en §6 de [PRODUCT.md](./PRODUCT.md).
