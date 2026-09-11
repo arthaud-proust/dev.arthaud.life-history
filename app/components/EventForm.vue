@@ -33,7 +33,12 @@ const end = ref("");
 /** Un évènement dure — c'est l'exception, et la date de fin ne s'affiche qu'alors. */
 const isPeriod = ref(false);
 const description = ref("");
-const DEFAULT_COLOR = "amber";
+/**
+ * La couleur proposée est celle du thème : un évènement auquel on ne touche pas se
+ * fond dans l'application, et la palette n'a pas besoin d'une pastille à part pour
+ * dire « comme le thème ». Elle suit donc `app.config.ts`, sans le redire ici.
+ */
+const DEFAULT_COLOR = useAppConfig().ui.colors.primary;
 const color = ref<string>(DEFAULT_COLOR);
 const endField = useTemplateRef<{ focus: () => void }>("endField");
 const descriptionField = useTemplateRef<{ textareaRef?: HTMLTextAreaElement }>(
@@ -127,15 +132,15 @@ function submit() {
 <template>
   <div class="@container">
     <form
-      class="grid gap-4 @4xl:grid-cols-[auto_minmax(0,1fr)] @4xl:items-start"
+      class="grid gap-4 gap-x-6 @4xl:grid-cols-[auto_minmax(0,1fr)] @4xl:items-start"
       @submit.prevent="submit"
     >
-      <div class="flex gap-3 @max-xl:flex-col">
+      <div class="flex gap-4 gap-x-6 @max-xl:flex-col">
         <div class="space-y-3">
           <DateField
             v-model="start"
             label="Date"
-            placeholder="juin 2023"
+            placeholder="Année, mois ou date"
             :autofocus="!event"
             @picked="afterStartPicked"
           />
@@ -146,7 +151,7 @@ function submit() {
           ref="endField"
           v-model="end"
           label="Date de fin"
-          placeholder="juillet 2024"
+          placeholder="Ex: décembre 2025"
           allow-today
           @picked="focusDescription"
         />
@@ -162,7 +167,7 @@ function submit() {
             v-model="description"
             :rows="3"
             autoresize
-            placeholder="Ex: Changement de travail"
+            placeholder="Évènement, humeur, action..."
             class="w-full"
             @keydown.enter.meta="submit"
             @keydown.enter.ctrl="submit"
@@ -183,7 +188,7 @@ function submit() {
             type="submit"
             :disabled="!canSubmit"
             :icon="edition ? 'i-lucide-save' : 'i-lucide-plus'"
-            :label="edition ? 'Enregister' : 'Ajouter'"
+            :label="edition ? 'Enregister' : 'Ajouter l\'évènement'"
           />
           <UButton
             v-if="event"

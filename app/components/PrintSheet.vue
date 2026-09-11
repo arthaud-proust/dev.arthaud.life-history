@@ -76,7 +76,10 @@ onMounted(() => {
       <footer
         class="flex items-baseline justify-between border-t border-neutral-300 pt-3 text-[22px] text-neutral-500"
       >
-        <span>{{ title }} — imprimé le {{ printedOn }}</span>
+        <span
+          >{{ title }} — imprimé le {{ printedOn }} depuis
+          life-history.arthaud.dev</span
+        >
         <span v-if="page.number < total"
           >suite page {{ page.number + 1 }} →</span
         >

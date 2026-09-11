@@ -1,206 +1,195 @@
 <script setup lang="ts">
+import type { ButtonProps } from "@nuxt/ui";
+
 /**
- * La frise et sa saisie.
+ * La page d'accueil : ce que l'outil est, et ce qu'il promet.
  *
- * Au premier lancement, avant qu'on y écrive quoi que ce soit, la page dit où vont les
- * données : c'est l'exigence B1, et elle vient en tête parce qu'elle conditionne la
- * confiance de tout ce qui suit.
- */
-import type { LifeEvent } from "~/utils/life-document";
-
-const history = useLifeHistory();
-const { events, issues, isEmpty, loaded } = history;
-const toast = useToast();
-
-const timeline = useTemplateRef("timeline");
-/**
- * Revenir à la ligne, ou dérouler la frise d'un seul trait. Une vie entière lue sans
- * rupture n'est pas la même chose qu'une vie rangée par lignes : c'est au patient de
- * choisir, et le réglage ne vaut que pour l'écran — le papier revient toujours.
+ * Elle s'adresse à quelqu'un qui arrive par un lien, souvent avant une séance, et qui
+ * doit pouvoir décider en une minute s'il confie son histoire à cette page. La
+ * promesse de confidentialité (B1) vient donc tôt et en clair, avant les fonctions.
  *
- * Le choix reste d'une visite à l'autre : c'est une habitude de lecture, pas une
- * décision à reprendre à chaque ouverture. Il vit à côté de la frise dans le
- * `localStorage`, et ne part donc pas davantage sur le réseau qu'elle (B1).
+ * La frise montrée en exemple est la vraie : le composant de la frise, avec quelques
+ * évènements écrits dans le format du fichier. Rien n'y est simulé — ce qu'on voit ici
+ * est ce qu'on obtient.
  */
-const wrap = useLocalStorage("life-history:wrap", true);
-const editing = ref<LifeEvent | null>(null);
+const { isEmpty, loaded } = useLifeHistory();
 
-function add(fields: Omit<LifeEvent, "id">) {
-  const event = history.addEvent(fields);
-  // La frise est une suite de cartes : celle qu'on vient d'écrire peut atterrir
-  // n'importe où dans l'ordre chronologique, on l'amène donc sous les yeux.
-  nextTick(() => timeline.value?.focusEvent(event.id));
-}
+const demo = computed(
+  () =>
+    parseDocument(
+      [
+        "# 12 juin 1998\nNaissance de ma sœur",
+        "# septembre 2004 à juin 2007; sky\nCollège\nTrois années difficiles.",
+        "# juin 2012\nLe bac, enfin",
+        "# 2015 à 2019; emerald\nÉtudes à Lyon\nLa ville où j’ai appris à vivre.",
+        "# mars 2020\nConfinement",
+      ].join("\n\n"),
+    ).events,
+);
 
-function saveEdit(fields: Omit<LifeEvent, "id">) {
-  if (!editing.value) return;
-  history.updateEvent(editing.value.id, fields);
-  editing.value = null;
-}
+/** Une frise déjà commencée se reprend ; sinon, elle s'ouvre. */
+const startLabel = computed(() =>
+  loaded.value && !isEmpty.value ? "Reprendre ma frise" : "Commencer ma frise",
+);
 
-function remove(event: LifeEvent) {
-  history.removeEvent(event.id);
-  toast.add({
-    title: `« ${titleOf(event)} » supprimé`,
-    color: "neutral",
-    icon: "i-lucide-trash-2",
-    duration: 8000,
-    actions: [
+const cta = computed(
+  () =>
+    [
+      { label: startLabel.value, to: "/app", icon: "i-lucide-arrow-right" },
       {
-        label: "Annuler",
-        color: "neutral",
+        label: "La construire avec un(e) psychologue",
+        to: "https://monsoutienpsy.ameli.fr/recherche-psychologue",
         variant: "outline",
-        onClick: () => history.undoRemove(),
+        target: "_blank",
       },
-    ],
-  });
-}
+    ] satisfies ButtonProps[],
+);
+
+const example = `# 2022; blue
+Déménagement à Lille
+
+# septembre 2004 à juin 2007; red
+Collège
+Trois années difficiles.
+
+# 12 juin 1998; green
+Naissance de ma sœur`;
 </script>
 
 <template>
-  <div class="space-y-6 py-6 print:hidden">
-    <UContainer class="space-y-6">
-      <UPageCard
-        v-if="isEmpty"
-        icon="i-lucide-shield-check"
-        title="Votre histoire ne quitte pas ce navigateur"
-        description="Les évènements que vous ajoutez sont enregistrés uniquement sur cet appareil. Rien n’est envoyé sur Internet. En contrepartie, effacer les données de votre navigateur ferait disparaître votre frise : pensez à l’exporter régulièrement."
-        variant="subtle"
-      />
-
-      <UCard>
-        <template #header>
-          <div>
-            <h2 class="text-highlighted font-semibold">Ajouter un évènement</h2>
-            <p class="text-muted mt-1 text-sm">
-              Une date suffit. Écrivez <em>1998</em> si vous ne vous souvenez
-              que de l’année, et cochez
-              <em>Cet évènement est une période</em> s’il a duré.
-            </p>
-          </div>
-        </template>
-
-        <EventForm @submit="add" />
-      </UCard>
-
-      <UAlert
-        v-if="issues.length"
-        color="warning"
-        variant="subtle"
-        icon="i-lucide-file-warning"
-        :title="`${issues.length} ligne${issues.length > 1 ? 's' : ''} de votre fichier n’${issues.length > 1 ? 'ont' : 'a'} pas été comprise${issues.length > 1 ? 's' : ''}`"
+  <div>
+    <UPageHero
+      headline="Outil d'accompagnement thérapeutique"
+      title="Réalisez une frise de votre vie"
+      description="Placez les évènements de votre vie les uns après les autres, avec vos mots et vos dates. La frise se met en page toute seule, s’imprime, et ne quitte jamais votre navigateur."
+      :links="cta"
+    >
+      <div
+        class="bg-default ring-default overflow-hidden rounded-xl shadow-sm ring"
       >
-        <template #description>
-          <p class="mb-2">
-            Elles sont conservées telles quelles et réapparaîtront à l’export —
-            rien n’est perdu.
-          </p>
-          <ul class="space-y-1">
-            <li
-              v-for="issue in issues"
-              :key="issue.line"
-              class="flex flex-wrap items-baseline gap-x-2 text-xs"
-            >
-              <code class="bg-elevated rounded px-1 py-0.5"
-                >ligne {{ issue.line }}</code
-              >
-              <span class="text-highlighted">{{ issue.raw.trim() }}</span>
-              <span class="text-muted">— {{ issue.reason }}</span>
-              <UButton
-                size="xs"
-                variant="link"
-                color="neutral"
-                label="Abandonner cette ligne"
-                @click="history.dismissIssue(issue)"
-              />
-            </li>
-          </ul>
-        </template>
-      </UAlert>
-      <!--
-      Déroulée, la frise n'est plus un texte mais une bande qui défile : la largeur de
-      lecture ne lui sert à rien, elle prend tout l'écran. Rangée par lignes, elle
-      revient dans la colonne du reste de la page. Un conteneur écrit à la main plutôt
-      qu'un `UContainer` neutralisé : c'est la même règle, dite une fois.
-    -->
-      <UCard
-        v-if="!isEmpty"
-        :ui="{
-          body: wrap ? '' : 'p-0 sm:p-0',
-          header: wrap ? '' : 'border-none',
-        }"
-      >
-        <template #header>
-          <div class="flex flex-wrap items-center justify-between gap-3">
-            <h2 class="text-highlighted font-semibold">Votre frise</h2>
-            <UCheckbox
-              v-model="wrap"
-              label="Revenir à la ligne"
-              :ui="{ label: 'text-muted font-normal' }"
-            />
+        <ClientOnly>
+          <div class="pointer-events-none select-none" aria-hidden="true">
+            <LifeTimeline :events="demo" />
           </div>
-        </template>
-        <ClientOnly v-if="wrap">
-          <LifeTimeline
-            v-if="loaded"
-            ref="timeline"
-            :events="events"
-            :wrap="wrap"
-            @select="
-              (id) =>
-                (editing = events.find((event) => event.id === id) ?? null)
-            "
-          />
           <template #fallback>
-            <div class="h-64" />
+            <div class="h-56" />
           </template>
         </ClientOnly>
-      </UCard>
-    </UContainer>
+      </div>
+    </UPageHero>
 
-    <ClientOnly v-if="!isEmpty">
-      <LifeTimeline
-        v-if="loaded && !wrap"
-        ref="timeline"
-        :events="events"
-        :wrap="wrap"
-        @select="
-          (id) => (editing = events.find((event) => event.id === id) ?? null)
-        "
-      />
-      <template #fallback>
-        <div class="h-64" />
-      </template>
-    </ClientOnly>
+    <UPageSection
+      icon="i-lucide-shield-check"
+      headline="Confidentialité"
+      title="Vos données ne quittent pas ce navigateur"
+      description="Il n’y a ni compte, ni cookie, ni collecte. Ce que vous écrivez est enregistré sur cet appareil, et nulle part ailleurs. En contrepartie, c’est à vous de garder une copie : l’export vous rend un fichier texte, que vous pouvez relire et réimporter."
+      :features="[
+        {
+          icon: 'i-lucide-wifi-off',
+          title: 'Rien n’est envoyé',
+          description:
+            'La page fonctionne entièrement dans votre navigateur, même hors ligne.',
+        },
+        {
+          icon: 'i-lucide-download',
+          title: 'Un fichier à vous',
+          description:
+            'L’export est un texte lisible, que vous rangez où vous voulez.',
+        },
+        {
+          icon: 'i-lucide-trash-2',
+          title: 'Effaçable d’un geste',
+          description:
+            'Un bouton efface la frise de cet appareil, sans rien laisser derrière.',
+        },
+      ]"
+    />
 
-    <UModal
-      :open="editing !== null"
-      title="Modifier l’évènement"
-      :ui="{ content: 'max-w-6xl' }"
-      @update:open="
-        (value) => {
-          if (!value) editing = null;
-        }
-      "
+    <UPageSection
+      headline="Ce que vous posez"
+      title="Notez ce dont vous vous souvenez"
+      description="On se ne souvient parfois pas d’un jour précis. Écrivez ce que vous savez et laissez le reste de côté."
     >
-      <template #body>
-        <EventForm
-          v-if="editing"
-          :event="editing"
-          edition
-          submit-label="Enregistrer"
-          @submit="saveEdit"
-          @cancel="editing = null"
-          @delete="
-            () => {
-              if (editing) {
-                remove(editing);
-                editing = null;
-              }
-            }
-          "
+      <UPageGrid>
+        <UPageCard
+          icon="i-lucide-calendar"
+          title="Des dates"
+          description="« 1998 » est une date valable. « juin 2023 » et « 12 juin 2022 » aussi."
+        />
+        <UPageCard
+          icon="i-lucide-move-horizontal"
+          title="Des périodes"
+          description="Une période de changement, une relation notable, deviennent un bandeau posé au-dessus des mois qu’il recouvrent."
+        />
+        <UPageCard
+          icon="i-lucide-align-left"
+          title="Des descriptions"
+          description="Une humeur, une raison ou encore une conséquence sont des informations utiles."
+        />
+        <UPageCard
+          icon="i-lucide-palette"
+          title="Des couleur"
+          description="Identifier d’un coup d’œil ce qui se ressemble grâce aux couleurs."
+        />
+        <UPageCard
+          icon="i-lucide-ellipsis"
+          title="Des ellipses"
+          description="Quand plus d’un mois sépare deux évènements, la frise le dit d’un « … » : les silences comptent aussi."
+        />
+        <UPageCard
+          icon="i-lucide-printer"
+          title="Ce que vous voulez"
+          description="Imprimez des feuilles A4 pour avoir un support annotable."
+        />
+      </UPageGrid>
+    </UPageSection>
+
+    <UPageSection
+      headline="Le fichier"
+      title="Un format de sauvegarde lisible par les humains"
+      description="Votre frise est enregistrée telle que vous la liriez. Chaque évènement commence par un dièse, suivi d'une date ou d'une période, d'une couleur et de sa description en dessous. Vous pouvez l’écrire à la main, le corriger dans un éditeur, le réimporter."
+      orientation="horizontal"
+    >
+      <!--
+        Pas de chasse fixe : ce n'est pas du code, c'est un texte que quelqu'un a
+        écrit et qu'il doit pouvoir relire.
+      -->
+      <pre
+        class="bg-elevated ring-default overflow-x-auto rounded-lg p-4 font-sans text-sm ring"
+        >{{ example }}</pre>
+    </UPageSection>
+
+    <UPageCTA
+      :title="`Voulez-vous ${loaded && !isEmpty ? 'reprendre' : 'commencer'} ?`"
+      :description="
+        loaded && !isEmpty
+          ? `Allez-y à votre rythme.`
+          : `Vous n'avez rien à installer. Une première date suffit.`
+      "
+      variant="subtle"
+      :links="cta"
+    />
+
+    <UFooter>
+      <template #left>
+        <p class="text-muted text-sm">
+          Libre de droits, créé par
+          <a href="https://arthaudproust.fr" target="_blank" class="underline"
+            >Arthaud Proust</a
+          >
+        </p>
+      </template>
+
+      <template #right>
+        <UButton
+          icon="i-simple-icons-github"
+          color="neutral"
+          variant="ghost"
+          to="https://github.com/arthaud-proust/dev.arthaud.life-history"
+          target="_blank"
+          aria-label="GitHub"
         />
       </template>
-    </UModal>
+    </UFooter>
   </div>
 </template>

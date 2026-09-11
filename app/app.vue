@@ -18,6 +18,13 @@ history.load();
 const toast = useToast();
 const route = useRoute();
 
+/**
+ * L'accueil présente l'outil ; les deux autres pages le font fonctionner. L'en-tête
+ * n'y propose donc pas les mêmes choses : sur l'accueil, une seule porte d'entrée.
+ */
+const isLanding = computed(() => route.path === "/");
+const isPrinting = computed(() => route.path === "/imprimer");
+
 const privacyOpen = ref(false);
 const importOpen = ref(false);
 const clearOpen = ref(false);
@@ -70,8 +77,8 @@ function confirmClear() {
       <template #left>
         <!-- Sur l'aperçu, il n'y a qu'une chose à faire du titre : en revenir. -->
         <UButton
-          v-if="route.path === '/imprimer'"
-          to="/"
+          v-if="isPrinting"
+          to="/app"
           icon="i-lucide-arrow-left"
           color="neutral"
           variant="ghost"
@@ -89,6 +96,14 @@ function confirmClear() {
 
       <template #right>
         <UButton
+          v-if="isLanding"
+          to="/app"
+          icon="i-lucide-arrow-right"
+          label="Ouvrir ma frise"
+        />
+
+        <UButton
+          v-if="!isLanding"
           icon="i-lucide-shield-check"
           color="neutral"
           variant="ghost"
@@ -98,6 +113,7 @@ function confirmClear() {
           @click="privacyOpen = true"
         />
         <UButton
+          v-if="!isLanding"
           icon="i-lucide-upload"
           color="neutral"
           variant="ghost"
@@ -107,6 +123,7 @@ function confirmClear() {
           @click="importOpen = true"
         />
         <UButton
+          v-if="!isLanding"
           icon="i-lucide-download"
           color="neutral"
           variant="ghost"
@@ -116,7 +133,7 @@ function confirmClear() {
           @click="exportFrise"
         />
         <UButton
-          v-if="route.path !== '/imprimer'"
+          v-if="!isLanding && !isPrinting"
           to="/imprimer"
           icon="i-lucide-printer"
           color="primary"
