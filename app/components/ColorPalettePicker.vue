@@ -16,7 +16,7 @@ const swatches = computed(() => [
   ...COLOR_NAMES.map((name) => ({
     name,
     value: name as string | undefined,
-    css: colorToHex(name) ?? "#000000",
+    css: colorToCss(name) ?? "transparent",
   })),
 ]);
 </script>

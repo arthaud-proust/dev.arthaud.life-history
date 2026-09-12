@@ -518,18 +518,19 @@ sans qu'il ait à connaître une case à cocher.
 
 ### La palette, lue dans Tailwind plutôt que recopiée
 
-Les teintes proposées sont celles du Tailwind installé, extraites à la compilation de
-`tailwindcss/theme.css` par un module Nuxt maison — l'équivalent, pour Tailwind 4, de
-l'`exposeConfig` de `@nuxtjs/tailwindcss` (qui suppose une configuration JavaScript, et
-ne s'applique donc pas ici). Aucune valeur n'est recopiée dans le code : la palette
-suit la version installée.
+Les teintes proposées sont celles du Tailwind installé, lues dans le paquet lui-même
+(`tailwindcss/colors`). Aucune valeur n'est recopiée dans le code : la palette suit la
+version installée.
 
-Tailwind 4 n'exprime plus ses couleurs qu'en `oklch()`, que ni un canvas ni un calcul
-de contraste ne savent lire. La conversion vers sRGB se fait donc une fois, à la
-compilation. Elle est vérifiée non pas sur des valeurs publiées — il n'en existe plus —
-mais sur les **sommets de l'espace sRGB**, dont le résultat est connu par construction :
-si le noir, le blanc, les trois primaires et le gris moyen tombent juste, la matrice et
-la fonction de transfert sont bonnes.
+Ce n'est pas l'`exposeConfig` de `@nuxtjs/tailwindcss` : ce module expose une
+configuration JavaScript, or Tailwind 4 se configure en CSS et n'est ici même pas
+installé de cette façon — c'est `@nuxt/ui` qui l'intègre.
+
+Tailwind 4 n'exprime plus ses couleurs qu'en `oklch()`, et cela suffit : elles ne
+servent qu'à être écrites dans du CSS, qui sait les lire. Le texte ne se pose jamais
+sur un aplat coloré — une carte porte sa couleur en bordure, un bandeau en fond très
+pâle — et sa lisibilité vient du thème, sombre sur clair et clair sur sombre. Aucun
+calcul de contraste n'est donc nécessaire, et aucune conversion vers sRGB non plus.
 
 ## 7. Exigences non fonctionnelles
 

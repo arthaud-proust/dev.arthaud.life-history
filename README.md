@@ -64,7 +64,6 @@ transiter par un serveur, et la frise n'est lue et rendue que dans le navigateur
 | [app/utils/life-document.ts](./app/utils/life-document.ts) | Le document texte : parseur, sérialiseur, fusion à l'import. |
 | [app/utils/timeline-sequence.ts](./app/utils/timeline-sequence.ts) | Disposition de la frise : colonnes accolées, jalons d'année, bandeaux de période. |
 | [app/utils/print-pagination.ts](./app/utils/print-pagination.ts) | Rangement des cartes en feuilles A4, à partir de leurs dimensions mesurées. |
-| [modules/tailwind-palette/](./modules/tailwind-palette/) | Module Nuxt qui extrait la palette de `tailwindcss/theme.css` à la compilation et la convertit d'oklch en sRGB. Expose `#tailwind-palette`. |
 | [app/composables/useLifeHistory.ts](./app/composables/useLifeHistory.ts) | L'état, et son unique lieu de stockage : le document texte dans `localStorage`. |
 | [app/components/LifeTimeline.vue](./app/components/LifeTimeline.vue) | La frise : une suite de cartes en HTML, écran et impression. |
 
