@@ -43,22 +43,34 @@ const label = computed(() =>
     :data-column="event.id"
     :type="frozen ? undefined : 'button'"
     role="listitem"
-    class="bg-default relative mx-1.5 flex flex-col overflow-hidden rounded-lg border-2 text-left"
+    class="bg-default relative flex min-w-0 flex-col overflow-hidden rounded-lg border-2 text-left"
     :class="
-      frozen ? 'p-4' : 'hover:bg-elevated cursor-pointer p-3 transition-colors'
+      frozen
+        ? 'mx-1.5 p-4'
+        : 'hover:bg-elevated mx-0.5 cursor-pointer p-1.5 transition-colors sm:mx-1.5 sm:p-3'
     "
     :style="{ borderColor: accentOf(event) }"
     :aria-label="label"
     @click="frozen ? undefined : emit('select', event.id)"
   >
+    <!--
+      Le texte doit pouvoir descendre sous la largeur de son plus long mot : une carte
+      de téléphone est plus étroite que « précision ». `wrap-anywhere` coupe le mot et,
+      contrairement à une simple césure, réduit vraiment la largeur minimale de la
+      boîte — sans quoi elle déborderait de la carte, qui la rognerait.
+    -->
     <time
-      class="text-muted tabular-nums"
-      :class="frozen ? 'text-[20px]' : 'text-xs'"
+      class="text-muted wrap-anywhere tabular-nums"
+      :class="frozen ? 'text-xl' : 'text-2xl sm:text-xs'"
       >{{ formatDateField(event) }}</time
     >
     <p
-      class="text-default mt-2 whitespace-pre-line"
-      :class="frozen ? 'text-[24px] leading-snug' : 'text-sm'"
+      class="text-default wrap-anywhere whitespace-pre-line"
+      :class="
+        frozen
+          ? 'mt-2 text-2xl leading-snug'
+          : 'mt-0.5 text-xs leading-snug sm:mt-2 sm:text-sm'
+      "
     >
       {{ event.description }}
     </p>

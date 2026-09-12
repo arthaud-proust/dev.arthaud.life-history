@@ -118,7 +118,13 @@ defineExpose({ focusEvent });
   <div
     ref="root"
     class="grid items-stretch"
-    :class="[frozen ? '' : 'px-3 py-4', wrap ? '' : 'overflow-x-auto pb-12']"
+    :class="[
+      // Sur un téléphone, la frise se resserre : marges et textes rapetissent pour que
+      // six cartes y tiennent encore. L'impression, elle, ne dépend d'aucun écran —
+      // ses tailles sont dites en pixels de la feuille, sans variante responsive.
+      frozen ? '' : 'px-1 py-2 sm:px-3 sm:py-4',
+      wrap ? '' : 'overflow-x-auto pb-12',
+    ]"
     :style="{ gridTemplateColumns: columns }"
     role="list"
     aria-label="Frise des évènements, par ordre chronologique"

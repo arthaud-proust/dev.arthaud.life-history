@@ -23,8 +23,8 @@ withDefaults(
 <template>
   <span
     aria-hidden="true"
-    class="bg-default text-dimmed self-center justify-self-center px-2 leading-none tracking-widest"
-    :class="frozen ? 'text-[28px]' : 'text-sm'"
+    class="bg-default text-dimmed self-center justify-self-center leading-none tracking-widest"
+    :class="frozen ? 'px-2 text-3xl' : 'px-0.5 text-xs sm:px-2 sm:text-sm'"
     >…</span
   >
 </template>

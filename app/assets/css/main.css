@@ -4,6 +4,9 @@
 @theme static {
   --font-sans: "Public Sans", sans-serif;
 
+  /* Un cran sous le plus petit de Tailwind : les cartes d'un téléphone. */
+  --text-2xl: 10px;
+
   --color-green-50: #effdf5;
   --color-green-100: #d9fbe8;
   --color-green-200: #b3f5d1;

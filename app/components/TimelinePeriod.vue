@@ -41,11 +41,11 @@ const label = computed(() =>
     :data-event="event.id"
     :type="frozen ? undefined : 'button'"
     role="listitem"
-    class="relative mx-1.5 mb-2 min-w-0 overflow-hidden rounded-lg text-left"
+    class="relative min-w-0 overflow-hidden rounded-lg text-left"
     :class="[
       frozen
-        ? 'px-4 py-3'
-        : 'hover:bg-elevated cursor-pointer px-3 py-2 transition-colors',
+        ? 'mx-1.5 mb-2 px-4 py-3'
+        : 'hover:bg-elevated mx-0.5 mb-1 cursor-pointer px-1.5 py-1 transition-colors sm:mx-1.5 sm:mb-2 sm:px-3 sm:py-2',
       band.continuesBefore ? 'rounded-l-none' : '',
       band.continuesAfter ? 'rounded-r-none' : '',
     ]"
@@ -56,13 +56,15 @@ const label = computed(() =>
     @click="frozen ? undefined : emit('select', event.id)"
   >
     <time
-      class="text-muted tabular-nums"
-      :class="frozen ? 'text-[20px]' : 'text-xs'"
+      class="text-muted wrap-anywhere tabular-nums"
+      :class="frozen ? 'text-xl' : 'text-2xl sm:text-xs'"
       >{{ formatDateField(event) }}</time
     >
     <p
-      class="text-default whitespace-pre-line"
-      :class="frozen ? 'text-[24px] leading-snug' : 'text-sm'"
+      class="text-default wrap-anywhere whitespace-pre-line"
+      :class="
+        frozen ? 'text-2xl leading-snug' : 'text-xs leading-snug sm:text-sm'
+      "
     >
       {{ event.description }}
     </p>
