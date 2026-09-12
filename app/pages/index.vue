@@ -19,7 +19,7 @@ const demo = computed(
     parseDocument(
       [
         "# 12 juin 1998\nNaissance de ma sœur",
-        "# septembre 2004 à juin 2007; sky\nCollège\nTrois années difficiles.",
+        "# septembre 2005 à juin 2009; sky\nCollège\nQuatre années difficiles.",
         "# juin 2012\nLe bac, enfin",
         "# 2015 à 2019; emerald\nÉtudes à Lyon\nLa ville où j’ai appris à vivre.",
         "# mars 2020\nConfinement",

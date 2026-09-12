@@ -8,7 +8,12 @@ const description =
 useHead({
   htmlAttrs: { lang: "fr" },
   meta: [{ name: "viewport", content: "width=device-width, initial-scale=1" }],
-  link: [{ rel: "icon", href: "/favicon.ico" }],
+  link: [
+    // Le jalon de l'en-tête, dans la couleur du thème. Le `.ico` — trois tailles —
+    // d'abord, le SVG ensuite : un navigateur retient le dernier qu'il sait lire.
+    { rel: "icon", href: "/favicon.ico", sizes: "16x16 32x32 48x48" },
+    { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+  ],
 });
 useSeoMeta({ title, description, robots: "noindex" });
 
