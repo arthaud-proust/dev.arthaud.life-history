@@ -127,13 +127,22 @@ function submit() {
   // teinte à la suite, et la redemander à chaque fois serait un clic de trop.
   focusDescription();
 }
+/** La modale d'édition valide au clavier, même si le focus n'est pas dans un champ. */
+defineExpose({ submit });
 </script>
 
 <template>
   <div class="@container">
+    <!--
+      Le raccourci vaut pour tout le formulaire, et non pour la seule description : on
+      corrige souvent une date ou une couleur, et on doit pouvoir valider de là où l'on
+      est — surtout dans la modale d'édition, où il n'y a rien d'autre à faire.
+    -->
     <form
       class="grid gap-4 gap-x-6 @4xl:grid-cols-[auto_minmax(0,1fr)] @4xl:items-start"
       @submit.prevent="submit"
+      @keydown.enter.meta.prevent.stop="submit"
+      @keydown.enter.ctrl.prevent.stop="submit"
     >
       <div class="flex gap-4 gap-x-6 @max-xl:flex-col">
         <div class="space-y-3">
@@ -169,8 +178,6 @@ function submit() {
             autoresize
             placeholder="Évènement, humeur, action..."
             class="w-full"
-            @keydown.enter.meta="submit"
-            @keydown.enter.ctrl="submit"
           />
           <template #help>
             <span class="whitespace-nowrap"

@@ -60,7 +60,7 @@ const label = computed(() =>
       boîte — sans quoi elle déborderait de la carte, qui la rognerait.
     -->
     <time
-      class="text-muted wrap-anywhere tabular-nums"
+      class="text-muted wrap-anywhere"
       :class="frozen ? 'text-xl' : 'text-2xl sm:text-xs'"
       >{{ formatDateField(event) }}</time
     >

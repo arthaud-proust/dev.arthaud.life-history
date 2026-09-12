@@ -56,7 +56,7 @@ const label = computed(() =>
     @click="frozen ? undefined : emit('select', event.id)"
   >
     <time
-      class="text-muted wrap-anywhere tabular-nums"
+      class="text-muted wrap-anywhere"
       :class="frozen ? 'text-xl' : 'text-2xl sm:text-xs'"
       >{{ formatDateField(event) }}</time
     >

@@ -24,6 +24,22 @@ const timeline = useTemplateRef("timeline");
  */
 const wrap = useLocalStorage("life-history:wrap", true);
 const editing = ref<LifeEvent | null>(null);
+const editForm = useTemplateRef<{ submit: () => void }>("editForm");
+
+/**
+ * ⌘↵ enregistre depuis n'importe où dans la modale d'édition.
+ *
+ * Le formulaire écoute déjà ses propres champs, mais la modale s'ouvre avec le focus
+ * sur son bouton de fermeture, et son cadre n'appartient pas au formulaire : on écoute
+ * donc le document, le temps que la modale soit ouverte. Le raccourci lancé depuis un
+ * champ ne remonte pas jusqu'ici — le formulaire arrête l'évènement.
+ */
+useEventListener(document, "keydown", (event: KeyboardEvent) => {
+  if (!editing.value) return;
+  if (event.key !== "Enter" || !(event.metaKey || event.ctrlKey)) return;
+  event.preventDefault();
+  editForm.value?.submit();
+});
 
 function add(fields: Omit<LifeEvent, "id">) {
   const event = history.addEvent(fields);
@@ -68,18 +84,7 @@ function remove(event: LifeEvent) {
         variant="subtle"
       />
 
-      <UCard>
-        <template #header>
-          <div>
-            <h2 class="text-highlighted font-semibold">Ajouter un évènement</h2>
-            <p class="text-muted mt-1 text-sm">
-              Une date suffit. Écrivez <em>1998</em> si vous ne vous souvenez
-              que de l’année, et cochez
-              <em>Cet évènement est une période</em> s’il a duré.
-            </p>
-          </div>
-        </template>
-
+      <UCard title="Ajouter un évènement">
         <EventForm @submit="add" />
       </UCard>
 
@@ -186,6 +191,7 @@ function remove(event: LifeEvent) {
       <template #body>
         <EventForm
           v-if="editing"
+          ref="editForm"
           :event="editing"
           edition
           submit-label="Enregistrer"
