@@ -58,6 +58,10 @@ yarn build       # site statique dans .output/public
 L'application est une **SPA statique** (`ssr: false`) : aucune donnée de patient ne peut
 transiter par un serveur, et la frise n'est lue et rendue que dans le navigateur.
 
+Elle fonctionne **hors connexion** : un agent de service (`@vite-pwa/nuxt`) met ses
+fichiers en cache au premier passage, et elle s'installe comme application. Le cache
+reçoit, il n'envoie rien — la promesse de confidentialité est intacte.
+
 | Emplacement | Rôle |
 |---|---|
 | [app/utils/partial-date.ts](./app/utils/partial-date.ts) | Dates partielles : lecture tolérante, écriture canonique. Seule autorité sur les dates, partagée par le fichier et le formulaire. |
@@ -66,6 +70,7 @@ transiter par un serveur, et la frise n'est lue et rendue que dans le navigateur
 | [app/utils/print-pagination.ts](./app/utils/print-pagination.ts) | Rangement des cartes en feuilles A4, à partir de leurs dimensions mesurées. |
 | [app/composables/useLifeHistory.ts](./app/composables/useLifeHistory.ts) | L'état, et son unique lieu de stockage : le document texte dans `localStorage`. |
 | [app/components/LifeTimeline.vue](./app/components/LifeTimeline.vue) | La frise : une suite de cartes en HTML, écran et impression. |
+| [public/](./public/) | Le jalon de l'en-tête décliné en favicons et en icônes d'application. |
 
 Le parseur et le sérialiseur sont le cœur du produit : ce sont eux qui garantissent
 qu'un export est réimportable, donc que les données appartiennent au patient. Ils sont

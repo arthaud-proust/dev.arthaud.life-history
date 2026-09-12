@@ -539,8 +539,12 @@ calcul de contraste n'est donc nécessaire, et aucune conversion vers sRGB non p
   respecté. La frise étant rendue en HTML, elle **est** son alternative accessible : son
   texte se sélectionne, se cherche et se lit au lecteur d'écran — aucune liste parallèle
   à maintenir.
-- **Hors-ligne** : l'application doit fonctionner sans connexion après le premier
-  chargement (service worker, v1.1).
+- **Hors-ligne** : l'application fonctionne sans connexion après le premier
+  chargement. Un agent de service met ses fichiers en cache — il reçoit, il n'envoie
+  rien : aucune donnée du patient n'y passe. Elle s'installe aussi comme application
+  (manifeste), et s'ouvre alors directement sur la frise. Une nouvelle version ne
+  s'applique pas d'elle-même : elle est proposée, pour ne pas recharger la page au
+  milieu d'une phrase.
 - **Performance** : fluide jusqu'à ~500 évènements (largement au-delà d'un usage réel).
 - **Robustesse des données** : aucune action ne doit pouvoir corrompre le `localStorage`
   de façon irrécupérable ; en cas de contenu illisible, proposer une récupération plutôt

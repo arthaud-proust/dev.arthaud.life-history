@@ -21,6 +21,34 @@ const history = useLifeHistory();
 history.load();
 
 const toast = useToast();
+
+/**
+ * Une nouvelle version ne s'installe pas dans le dos de celui qui écrit : elle attend
+ * qu'on la demande. Rien n'est perdu en attendant — la frise vit dans le navigateur,
+ * et l'ancienne version continue de fonctionner, hors connexion comprise.
+ */
+const { $pwa } = useNuxtApp();
+watch(
+  () => $pwa?.needRefresh,
+  (ready) => {
+    if (!ready) return;
+    toast.add({
+      title: "Une nouvelle version est prête",
+      description: "Vous pouvez l’appliquer quand vous voulez.",
+      color: "neutral",
+      icon: "i-lucide-refresh-cw",
+      duration: 0,
+      actions: [
+        {
+          label: "Mettre à jour",
+          color: "neutral",
+          variant: "outline",
+          onClick: () => $pwa?.updateServiceWorker(),
+        },
+      ],
+    });
+  },
+);
 const route = useRoute();
 
 /**
