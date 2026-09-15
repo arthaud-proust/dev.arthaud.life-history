@@ -170,19 +170,44 @@ les périodes retrouvent ce qu'elles disent : ce sous quoi le reste s'est dérou
 > En tant que patient, je veux regrouper mes évènements par thème, afin de faire
 > apparaître des motifs.
 
-Le format texte retenu (§5) n'a pas de champ « catégorie ». Plutôt que d'ajouter une
-colonne — qui alourdirait chaque ligne —, la piste retenue est l'**étiquette dans le
-libellé** : `2003 à 2006; Lycée #école`. Elle reste lisible dans le fichier, survit à
-un aller-retour export/import, et n'impose rien à qui n'en veut pas.
+Le format porte désormais une **catégorie**, après la couleur (§5) : `# 2003 à 2006;
+rose; scolarité`. Elle a été introduite pour que l'application retrouve ce qu'elle a
+posé (A7), et elle se prête au regroupement — il reste à lui donner une interface.
 
 Critères d'acceptation :
 
-- Un mot préfixé de `#` dans le libellé est reconnu comme thème et retiré du titre
-  affiché sur la frise.
-- Une légende liste les thèmes rencontrés et permet d'en masquer/afficher un d'un clic.
+- Une légende liste les catégories rencontrées et permet d'en masquer/afficher une
+  d'un clic.
+- La catégorie se saisit et se retire depuis le formulaire, sans passer par le fichier.
 - La palette par défaut reste sobre et lisible en niveaux de gris (contrainte
   d'impression noir & blanc).
 - Un libellé sans étiquette reste parfaitement valide.
+
+**A7 — Poser mes années d'école**
+
+> En tant que patient, je veux que mes années d'école apparaissent d'un coup à partir
+> de ma date de naissance, afin de ne pas saisir une à une quinze périodes que je
+> connais sans les avoir en tête.
+
+Une scolarité est **déductible** : en France, la classe se fait par année civile de
+naissance, et l'année scolaire court de septembre à juin. Qui sait sa date de naissance
+sait donc, sans le savoir, quand il est entré au CP. C'est le seul endroit du produit
+où l'application propose des évènements — ailleurs, elle ne devine jamais.
+
+Critères d'acceptation :
+
+- Une modale demande la **date de naissance**, puis les étapes du parcours : crèche ou
+  nounou, maternelle, primaire, collège, lycée, CAP, études supérieures.
+- Chaque étape se coche, se retire, et **se règle en années** — une durée plus longue
+  décale tout ce qui suit, sans avoir à le redire. L'application ne demande pas
+  pourquoi : redoublement, année sabbatique, réorientation, maladie ne la regardent
+  pas, et la nommer serait une manière de juger.
+- Une étape sautée ne décale rien : la suivante reprend à sa rentrée normale.
+- Un **aperçu** montre les périodes, avec leurs dates, avant qu'elles n'existent.
+- Ce qui est posé est une frise ordinaire : chaque période se corrige ensuite carte par
+  carte, y compris sa description et sa couleur.
+- Les périodes posées portent la catégorie `scolarité` (et la naissance `naissance`) :
+  refaire le parcours **remplace les précédentes** sans toucher au reste de la frise.
 
 **A6 — Retrouver mon travail**
 
@@ -331,7 +356,7 @@ perte possible entre les trois.
 ```text
 Mon histoire, commencée en thérapie.
 
-# 1987
+# 1987; emerald
 Naissance
 
 # 2003 à 2006; rose
@@ -342,6 +367,9 @@ J’y ai quand même rencontré Camille.
 
 # 12 juin 2022 à aujourd'hui; sky
 Thérapie
+
+# septembre 2003 à juin 2006; amber; scolarité
+École maternelle
 ```
 
 ### Grammaire
@@ -350,18 +378,31 @@ Une ligne commençant par `#` ouvre un évènement et porte sa date ; **tout ce 
 jusqu'au prochain `#` est sa description**.
 
 ```text
-# <date ou période>[; <couleur>]
+# <date ou période>[; <couleur>][; <catégorie>]
 <description, sur autant de lignes qu'il le faut>
 ```
+
+À l'écriture, l'application est plus stricte que cette grammaire : **elle met toujours
+une couleur**, puisque le formulaire en propose une d'office. Ce que l'on relit dans un
+fichier exporté a donc toujours la forme `# <date>; <couleur>[; <catégorie>]`. Les
+crochets ne valent que pour la lecture — d'un fichier écrit ou corrigé à la main.
 
 - **La ligne `#` — la date.** Soit une date seule, soit une période `<date> à <date>`.
   Trois précisions possibles : `2024` (année), `juin 2023` (mois), `12 juin 2022`
   (jour). Le début et la fin d'une période peuvent avoir des précisions différentes.
   `aujourd'hui` comme date de fin marque une période toujours en cours.
-- **La couleur**, après un `;`, est facultative : c'est le **nom d'une teinte** de la
-  palette (`rose`, `emerald`, `slate`), éventuellement avec sa nuance (`sky-700`). Un
-  nom plutôt qu'un code hexadécimal, parce que le fichier doit rester lisible —
-  « rose » dit quelque chose à qui l'ouvre, « #ff2056 » non.
+- **La couleur**, après un `;`, est le **nom d'une teinte** de la palette (`rose`,
+  `emerald`, `slate`), éventuellement avec sa nuance (`sky-700`). Un nom plutôt qu'un
+  code hexadécimal, parce que le fichier doit rester lisible — « rose » dit quelque
+  chose à qui l'ouvre, « #ff2056 » non. L'application en écrit toujours une ; son
+  absence n'est tolérée qu'à la lecture, et l'évènement prend alors la couleur du
+  thème.
+- **La catégorie**, après la couleur, est facultative : une étiquette libre
+  (`scolarité`, `travail`). Elle sert d'abord à l'application, qui retrouve par elle
+  les évènements qu'elle a posés — les années d'école — pour les refaire sans toucher
+  au reste. Comme la position seule les distingue, un mot unique qui n'est pas une
+  teinte connue est lu comme une catégorie : le cas ne se présente que dans un fichier
+  écrit à la main, puisque l'application écrit toujours la couleur.
 - **La description** occupe les lignes suivantes. Elle est obligatoire, et **libre** :
   plusieurs paragraphes, de la ponctuation, des points-virgules — rien n'y est
   réservé. Sa **première ligne** sert d'étiquette sur la frise.
@@ -392,9 +433,9 @@ Acceptés en lecture :
 | Couleur                   | `rose`, `Rose`, `sky-700`                          |
 
 Écrits à l'export (forme canonique) : mois en toutes lettres en français
-(`12 juin 2022`, `juin 2023`, `2024`), séparateur de période `à`, couleur après
-`; ` en minuscules, un évènement par bloc séparé d'une ligne vide, blocs triés par
-ordre chronologique.
+(`12 juin 2022`, `juin 2023`, `2024`), séparateur de période `à`, **couleur toujours
+présente** après `; ` en minuscules, catégorie ensuite si l'évènement en porte une, un
+évènement par bloc séparé d'une ligne vide, blocs triés par ordre chronologique.
 
 **Ordre des blocs à l'écriture.** Le préambule reste en tête, les évènements suivent
 par ordre chronologique, et les blocs incompris sont réécrits en fin de fichier dans

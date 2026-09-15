@@ -115,6 +115,9 @@ function submit() {
     end: (isPeriod.value ? parsedEnd.value : null) ?? undefined,
     description: cleanedDescription.value,
     color: color.value,
+    // La catégorie ne se saisit pas ici, mais elle survit à une correction : c'est
+    // par elle que l'application retrouve les années d'école qu'elle a posées.
+    category: props.event?.category,
   });
   if (props.event) return;
   // La date avance d'elle-même : on raconte une vie dans l'ordre, un mois après

@@ -5,11 +5,18 @@
  *     Lycée
  *     Trois années difficiles, loin de ma famille.
  *
- *     # juin 2023
+ *     # juin 2023; slate
  *     Perte d'un proche
  *
- * Une ligne `#` ouvre un évènement et porte sa date, éventuellement sa couleur ; tout
- * ce qui suit jusqu'au prochain `#` est sa description, librement sur plusieurs lignes.
+ *     # septembre 2003 à juin 2006; amber; scolarité
+ *     École maternelle
+ *
+ * Une ligne `#` ouvre un évènement et porte sa date, puis sa couleur et sa catégorie ;
+ * tout ce qui suit jusqu'au prochain `#` est sa description, librement sur plusieurs
+ * lignes.
+ *
+ * L'application écrit **toujours** une couleur — le formulaire en propose une d'office.
+ * La lecture, elle, se passe des deux : un fichier écrit à la main reste valable.
  *
  * Règle cardinale : **aucune ligne n'est jamais perdue**. Un bloc incompris est
  * conservé tel quel et réécrit à l'identique, plutôt que deviné ou supprimé.
@@ -41,6 +48,14 @@ export interface LifeEvent {
   description: string;
   /** Nom d'une teinte de la palette (`rose`, `emerald`, `slate-300`). */
   color?: string;
+  /**
+   * Étiquette libre, écrite après la couleur — `scolarité`, `travail`, `santé`.
+   *
+   * Elle sert d'abord à l'application : c'est ainsi qu'elle retrouve les évènements
+   * qu'elle a posés elle-même, comme les années d'école, pour les refaire sans
+   * toucher au reste de la frise.
+   */
+  category?: string;
 }
 
 /**
@@ -140,25 +155,41 @@ function parseDateField(
 }
 
 /** Lit l'en-tête d'un évènement : `# <date ou période>[; <couleur>]`. */
-function parseHeading(
-  heading: string,
-): { start: PartialDate; end?: DateBoundary; color?: string } | string {
-  const separator = heading.indexOf(";");
-  const dateField = (
-    separator === -1 ? heading : heading.slice(0, separator)
-  ).trim();
+/**
+ * Lit l'en-tête d'un évènement : une date, puis ce qui la qualifie.
+ *
+ * Après la date viennent la couleur et la catégorie, dans cet ordre. Aucune des deux
+ * n'est obligatoire, et l'on reconnaît la couleur à ce qu'elle nomme une teinte de la
+ * palette : « rose » est une couleur, « scolarité » une catégorie. Une frise écrite à
+ * la main peut donc porter l'une sans l'autre.
+ */
+function parseHeading(heading: string):
+  | {
+      start: PartialDate;
+      end?: DateBoundary;
+      color?: string;
+      category?: string;
+    }
+  | string {
+  const [dateField, ...rest] = heading.split(";").map((part) => part.trim());
 
-  const dates = parseDateField(dateField);
+  const dates = parseDateField(dateField!);
   if (typeof dates === "string") return dates;
-  if (separator === -1) return dates;
 
-  const written = heading.slice(separator + 1).trim();
-  if (written === "") return dates;
+  const written = rest.filter((part) => part !== "");
+  if (written.length === 0) return dates;
+  if (written.length > 2)
+    return `« ${heading.trim()} » porte plus qu'une couleur et une catégorie.`;
 
-  const color = parseColorToken(written);
-  return color
-    ? { ...dates, color }
-    : `« ${written} » n'est pas une couleur connue.`;
+  const color = parseColorToken(written[0]!);
+  if (color) {
+    const category = written[1];
+    return category ? { ...dates, color, category } : { ...dates, color };
+  }
+
+  if (written.length > 1)
+    return `« ${written[0]} » n'est pas une couleur connue.`;
+  return { ...dates, category: written[0] };
 }
 
 /** Lit un document. Ne lève jamais : ce qu'elle ne comprend pas, elle le signale. */
@@ -232,7 +263,8 @@ export function formatDateField(
 }
 
 export function serializeEvent(event: LifeEvent): string {
-  const heading = `# ${formatDateField(event)}${event.color ? `; ${event.color}` : ""}`;
+  const qualifiers = [event.color, event.category].filter(Boolean);
+  const heading = `# ${formatDateField(event)}${qualifiers.map((part) => `; ${part}`).join("")}`;
   return `${heading}\n${normalizeDescription(event.description)}`;
 }
 

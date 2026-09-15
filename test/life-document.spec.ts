@@ -129,8 +129,17 @@ describe("couleurs", () => {
     );
   });
 
-  it("signale une teinte inconnue plutôt que de l’ignorer", () => {
-    const doc = parseDocument("# 2024; bordeaux\nDéménagement");
+  it("prend pour une catégorie ce qui n’est pas une teinte connue", () => {
+    // Depuis que l'en-tête porte aussi une catégorie, un mot seul qui n'est pas une
+    // couleur en est une. Une teinte mal orthographiée devient donc une catégorie —
+    // cela se voit sur la frise, qui reprend la couleur du thème.
+    const event = parseDocument("# 2024; bordeaux\nDéménagement").events[0]!;
+    expect(event.color).toBeUndefined();
+    expect(event.category).toBe("bordeaux");
+  });
+
+  it("signale une teinte inconnue quand une catégorie la suit", () => {
+    const doc = parseDocument("# 2024; bordeaux; travail\nDéménagement");
     expect(doc.events).toHaveLength(0);
     expect(doc.issues[0]!.reason).toContain("bordeaux");
     expect(serializeDocument(doc)).toContain("bordeaux");
@@ -256,5 +265,45 @@ describe("labelOf", () => {
 
   it("laisse une description d’une ligne intacte", () => {
     expect(labelOf({ description: "Naissance" })).toBe("Naissance");
+  });
+});
+
+describe("catégorie", () => {
+  const relire = (texte: string) => parseDocument(texte).events[0]!;
+
+  it("se lit après la couleur", () => {
+    const event = relire("# 2003 à 2006; rose; scolarité\nCollège");
+    expect(event.color).toBe("rose");
+    expect(event.category).toBe("scolarité");
+  });
+
+  it("se lit seule, sans couleur", () => {
+    const event = relire("# 2003; scolarité\nCollège");
+    expect(event.color).toBeUndefined();
+    expect(event.category).toBe("scolarité");
+  });
+
+  it("s’écrit après la couleur", () => {
+    const doc = parseDocument("# 2003 à 2006; rose; scolarité\nCollège");
+    expect(serializeDocument(doc)).toBe(
+      "# 2003 à 2006; rose; scolarité\nCollège\n",
+    );
+  });
+
+  it("fait l’aller-retour sans couleur", () => {
+    const doc = parseDocument("# 2003; scolarité\nCollège");
+    expect(serializeDocument(doc)).toBe("# 2003; scolarité\nCollège\n");
+  });
+
+  it("refuse une couleur inconnue suivie d’une catégorie", () => {
+    const doc = parseDocument("# 2003; mauv; scolarité\nCollège");
+    expect(doc.events).toHaveLength(0);
+    expect(doc.issues[0]!.reason).toContain("n'est pas une couleur connue");
+  });
+
+  it("refuse un en-tête surchargé", () => {
+    const doc = parseDocument("# 2003; rose; scolarité; et puis quoi\nCollège");
+    expect(doc.events).toHaveLength(0);
+    expect(doc.issues).toHaveLength(1);
   });
 });

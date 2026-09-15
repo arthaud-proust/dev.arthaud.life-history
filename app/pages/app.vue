@@ -25,6 +25,26 @@ const timeline = useTemplateRef("timeline");
 const wrap = useLocalStorage("life-history:wrap", true);
 const editing = ref<LifeEvent | null>(null);
 const editForm = useTemplateRef<{ submit: () => void }>("editForm");
+const schoolingOpen = ref(false);
+
+/**
+ * Les années d'école remplacent celles déjà posées, et elles seules : ce que le
+ * patient a écrit de sa main reste intact, même si cela tombe sur les mêmes années.
+ */
+function addSchooling(fields: Omit<LifeEvent, "id">[]) {
+  const { removed, added } = history.replaceCategories(
+    [SCHOOLING_CATEGORY, BIRTH_CATEGORY],
+    fields,
+  );
+  toast.add({
+    title: removed
+      ? `${added} périodes posées, ${removed} remplacées`
+      : `${added} périodes ajoutées à votre frise`,
+    description: "Vous pouvez les corriger une à une, comme les autres.",
+    color: "success",
+    icon: "i-lucide-graduation-cap",
+  });
+}
 
 /**
  * ⌘↵ enregistre depuis n'importe où dans la modale d'édition.
@@ -85,6 +105,23 @@ function remove(event: LifeEvent) {
       />
 
       <UCard title="Ajouter un évènement">
+        <template #header>
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2 class="text-highlighted font-semibold">Ajouter un évènement</h2>
+            <!--
+              Une scolarité, ce sont quinze périodes que personne n'a envie de saisir
+              une à une : on les déduit d'une date de naissance.
+            -->
+            <UButton
+              color="neutral"
+              variant="subtle"
+              icon="i-lucide-graduation-cap"
+              label="Gérer les périodes scolaires"
+              @click="schoolingOpen = true"
+            />
+          </div>
+        </template>
+
         <EventForm @submit="add" />
       </UCard>
 
@@ -177,6 +214,12 @@ function remove(event: LifeEvent) {
         <div class="h-64" />
       </template>
     </ClientOnly>
+
+    <SchoolingDialog
+      v-model:open="schoolingOpen"
+      :events="events"
+      @confirm="addSchooling"
+    />
 
     <UModal
       :open="editing !== null"

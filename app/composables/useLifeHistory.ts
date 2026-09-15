@@ -86,6 +86,27 @@ export function useLifeHistory() {
     persist();
   }
 
+  /**
+   * Remplace tout ce qui porte ces catégories. C'est ainsi que les années d'école se
+   * refont : l'application retire ce qu'elle avait posé, puis repose le parcours
+   * corrigé — sans toucher à ce que le patient a écrit lui-même.
+   */
+  function replaceCategories(
+    categories: string[],
+    fields: Omit<LifeEvent, "id">[],
+  ): { removed: number; added: number } {
+    const retired = new Set(categories);
+    const kept = doc.value.events.filter(
+      (event) => !event.category || !retired.has(event.category),
+    );
+    const removed = doc.value.events.length - kept.length;
+    doc.value.events = [...kept, ...fields.map(createEvent)].sort(
+      compareEvents,
+    );
+    persist();
+    return { removed, added: fields.length };
+  }
+
   /** Rattrape la dernière suppression, tant qu'une autre n'a pas eu lieu (A3). */
   function undoRemove() {
     const event = lastDeleted.value;
@@ -145,6 +166,7 @@ export function useLifeHistory() {
     addEvent,
     updateEvent,
     removeEvent,
+    replaceCategories,
     undoRemove,
     dismissIssue,
     importText,

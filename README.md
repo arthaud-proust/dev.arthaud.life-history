@@ -17,7 +17,7 @@ Un seul format sert de stockage, d'export et d'import — une ligne par évènem
 ```text
 Mon histoire, commencée en thérapie.
 
-# 1987
+# 1987; emerald
 Naissance
 
 # 2003 à 2006; rose
@@ -26,12 +26,19 @@ Trois années difficiles, loin de ma famille.
 
 # 12 juin 2022 à aujourd'hui; sky
 Thérapie
+
+# septembre 2003 à juin 2006; amber; scolarité
+École maternelle
 ```
 
-Une ligne `#` ouvre un évènement et porte sa date, éventuellement sa couleur ; tout ce
-qui suit jusqu'au prochain `#` est sa description, **libre et sur autant de lignes
+Une ligne `#` ouvre un évènement et porte sa date, sa couleur puis sa catégorie ; tout
+ce qui suit jusqu'au prochain `#` est sa description, **libre et sur autant de lignes
 qu'il le faut**. Sa première ligne sert d'étiquette sur la frise. La couleur est le nom
-d'une teinte Tailwind, pour que le fichier reste lisible.
+d'une teinte Tailwind, pour que le fichier reste lisible ; l'application en écrit
+toujours une. La catégorie est une étiquette libre, facultative : c'est par elle que
+l'application retrouve les évènements qu'elle a posés elle-même, comme les années
+d'école. À la lecture, les deux peuvent manquer — un fichier écrit à la main reste
+valable.
 
 Les dates acceptent trois précisions — `2024`, `juin 2023`, `12 juin 2022` — parce
 qu'on ne se souvient pas toujours du mois. La lecture est tolérante (`06/2023`,
@@ -68,6 +75,7 @@ reçoit, il n'envoie rien — la promesse de confidentialité est intacte.
 | [app/utils/life-document.ts](./app/utils/life-document.ts) | Le document texte : parseur, sérialiseur, fusion à l'import. |
 | [app/utils/timeline-sequence.ts](./app/utils/timeline-sequence.ts) | Disposition de la frise : colonnes accolées, jalons d'année, bandeaux de période. |
 | [app/utils/print-pagination.ts](./app/utils/print-pagination.ts) | Rangement des cartes en feuilles A4, à partir de leurs dimensions mesurées. |
+| [app/utils/schooling.ts](./app/utils/schooling.ts) | Les années d'école déduites d'une date de naissance : rentrées, durées, redoublements. |
 | [app/composables/useLifeHistory.ts](./app/composables/useLifeHistory.ts) | L'état, et son unique lieu de stockage : le document texte dans `localStorage`. |
 | [app/components/LifeTimeline.vue](./app/components/LifeTimeline.vue) | La frise : une suite de cartes en HTML, écran et impression. |
 | [public/](./public/) | Le jalon de l'en-tête décliné en favicons et en icônes d'application. |
