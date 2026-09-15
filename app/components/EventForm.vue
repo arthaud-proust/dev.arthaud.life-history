@@ -57,7 +57,13 @@ watchEffect(() => {
 // Décocher, c'est renoncer à la date de fin : la garder en mémoire la ferait
 // réapparaître à la prochaine coche, sans que personne l'ait demandée.
 watch(isPeriod, (periode) => {
-  if (!periode) end.value = "";
+  if (!periode) {
+    end.value = "";
+    return;
+  }
+  // Une période commence par durer un instant : sa fin part de son début, qu'il n'y a
+  // plus qu'à pousser. Une fin déjà écrite — à l'édition — n'est jamais écrasée.
+  if (!end.value.trim()) end.value = start.value;
 });
 
 function focusDescription() {

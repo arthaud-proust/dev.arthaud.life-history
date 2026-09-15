@@ -9,6 +9,8 @@
  * Tout est modifiable ensuite : ce qui est posé est une frise ordinaire. Et rien n'est
  * inséré à l'aveugle — l'aperçu montre les périodes avant qu'elles n'existent.
  */
+import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
+import type { DateValue } from "@internationalized/date";
 import type { StageChoice } from "~/utils/schooling";
 
 const open = defineModel<boolean>("open", { required: true });
@@ -20,8 +22,17 @@ const props = defineProps<{
 
 const emit = defineEmits<{ confirm: [events: Omit<LifeEvent, "id">[]] }>();
 
-const birth = ref("");
+/**
+ * La date de naissance se tape, jour mois année. Le champ de date habituel de
+ * l'application est fait pour des souvenirs flous (« vers 1998 ») et travaille au
+ * mois ; une date de naissance, elle, se connaît par cœur — on la saisit d'une traite
+ * plutôt que de remonter trente ans de calendrier.
+ */
+const birth = ref<DateValue | undefined>();
 const choices = ref<Record<string, StageChoice>>(defaultChoices());
+
+/** Personne n'est né demain. */
+const maxBirth = today(getLocalTimeZone());
 
 /** Ce qu'un remplacement effacerait : la naissance et les périodes déjà posées. */
 const existing = computed(
@@ -39,12 +50,20 @@ const existing = computed(
 watch(open, (isOpen) => {
   if (!isOpen) return;
   const posed = readSchooling(props.events);
-  birth.value = posed.birth ? formatPartialDate(posed.birth) : "";
+  // Un calendrier ne sait pas porter une date partielle : on ne le pose que sur une
+  // date complète, sinon on laisse le patient la redonner.
+  const known = posed.birth;
+  birth.value =
+    known?.month && known.day
+      ? new CalendarDate(known.year, known.month, known.day)
+      : undefined;
   choices.value = posed.choices;
 });
 
 const parsedBirth = computed(() =>
-  birth.value.trim() ? parsePartialDate(birth.value) : null,
+  birth.value
+    ? { year: birth.value.year, month: birth.value.month, day: birth.value.day }
+    : null,
 );
 
 /** Les périodes telles qu'elles seront écrites, ou rien tant que la date manque. */
@@ -75,11 +94,17 @@ function confirm() {
   >
     <template #body>
       <div class="space-y-5">
-        <DateField
-          v-model="birth"
+        <UFormField
           label="Date de naissance"
-          placeholder="12 juin 2000"
-        />
+          help="C’est l’année qui décide des rentrées : en France, la classe se fait par année de naissance."
+        >
+          <UInputDate
+            v-model="birth"
+            locale="fr-FR"
+            :max-value="maxBirth"
+            class="w-full"
+          />
+        </UFormField>
 
         <!--
           Un `UFormField` désigne **un** contrôle : il donne son identifiant à tout ce
@@ -92,9 +117,7 @@ function confirm() {
             Votre parcours
           </legend>
           <p class="text-muted mt-1 text-xs">
-            En France, la classe se fait par année de naissance : seule l’année
-            compte pour les rentrées. Une étape qui a duré plus longtemps décale
-            celles qui suivent.
+            Une étape qui a duré plus longtemps décale celles qui suivent.
           </p>
 
           <ul class="divide-default mt-2 divide-y">
